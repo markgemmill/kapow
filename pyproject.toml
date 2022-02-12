@@ -6,10 +6,44 @@ authors = ["Mark Gemmill <mark@markgemmill.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+tomlkit = "^0.9.2"
+docopt-ng = "^0.7.2"
+rich = "^11.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.0"
+coverage = "^6.3.1"
+pytest-cov = "^3.0.0"
+black = "^22.1.0"
+dover = "^0.5.1"
+isort = "^5.10.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.dover]
+versioned_files = [
+    "pyproject.toml",
+    "launch/__init__.py"
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--verbose --cov=launch tests"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = []
+
+[tool.coverage.report]
+show_missing=true
+
+[tool.black]
+exclude = "(sample.py|vcc_data.py)"
+
+[tool.isort]
+quiet = true
+profile = "black"
+force_single_line = true
+no_lines_before=["FUTURE","STDLIB","THIRDPARTY","FIRSTPARTY","LOCALFOLDER"]
