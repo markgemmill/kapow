@@ -40,6 +40,7 @@ def create_poetry_pyproject(ctx: GenerateContext, pyproject_file: Path):
     deps["tomlkit"] = "^0.9.2"
     deps["docopt-ng"] = "^0.7.2"
     deps["rich"] = "^11.2"
+    deps["kapow"] = "^0.1.0"
 
     build_system = tomlkit.table()
     build_system["requires"] = ["poetry-core>=1.0.0"]
