@@ -1,8 +1,8 @@
 import pytest
 from common import Handler
-from launch import Application
-from launch import LaunchError
-from launch.handlers import docopt_handler
+from kapow import Application
+from kapow import LaunchError
+from kapow.handlers import docopt_handler
 
 
 def test_application_add_handler_invalid_function():
@@ -21,7 +21,7 @@ def test_application_add_handler_invalid_function():
 
     assert (
         str(ex.value)
-        == "A Launch handler callable must have 2 arguments. `dud_handler` has 1 arguements."
+        == "A Launch handler callable must have 2 arguments (app, ctx). `dud_handler` has 1 argument."
     )
 
 
@@ -96,9 +96,8 @@ def test_application_docopt_cli_handler():
         command_handler=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
         after_cli_handler=Handler("CLI ARGS", messages, func=capture_cli_args),
+        cli_args="run --debug".split(" ")
     )
-
-    app.initialize(cli_args="run --debug".split(" "))
 
     app.main()
 

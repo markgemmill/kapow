@@ -1,8 +1,36 @@
 [tool.poetry]
-name = "launch"
+name = "kapow"
 version = "0.1.0"
 description = ""
 authors = ["Mark Gemmill <mark@markgemmill.com>"]
+maintainers = [
+    "Mark Gemmill <dev@markgemmill.com>",
+    "Jason Clarke <jay@jayscorner.com>"
+]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/markgemmill/kapow"
+repository = "https://github.com/markgemmill/kapow"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries :: Application Frameworks"
+]
+include = [
+    "kapow/cli/resource/*.txt",
+    "kapow/resources/logging.ini"
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -22,19 +50,22 @@ isort = "^5.10.1"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.scripts]
+kapow = "kapow.cli:main"
+
 [tool.dover]
 versioned_files = [
     "pyproject.toml",
-    "launch/__init__.py"
+    "kapow/__init__.py"
 ]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--verbose --cov=launch tests"
+addopts = "--verbose --cov=kapow tests"
 testpaths = ["tests"]
 
 [tool.coverage.run]
-omit = []
+omit = ['kapow/appdirs.py']
 
 [tool.coverage.report]
 show_missing=true

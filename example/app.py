@@ -1,6 +1,6 @@
 import logging
-from launch import Application
-from launch import handlers
+from kapow import Application
+from kapow import handlers
 
 log = logging.getLogger("appy")
 

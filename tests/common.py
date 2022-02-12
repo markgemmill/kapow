@@ -29,6 +29,6 @@ class Handler:
 
     def error_handler(self):
         def __command(appname, ctx, error):
-            self.messages.append(f"{self.name}")
+            self.messages.append(f"{self.name} {error}")
 
         return __command

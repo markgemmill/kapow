@@ -15,8 +15,8 @@ __version__ = "1.4.4"
 __version_info__ = tuple(int(segment) for segment in __version__.split("."))
 
 
-import sys
 import os
+import sys
 from os import environ
 from pathlib import Path
 
@@ -49,6 +49,16 @@ def user_name():
         return environ["USER"]
     else:
         return environ["USER"]
+
+
+def user_full_name():
+    if system == "win32":
+        # TODO: implement this for windows
+        return None
+    else:
+        import pwd
+        uid = pwd.getpwuid(os.getuid())
+        return uid.pw_gecos
 
 
 def user_data_dir(appname=None, appauthor=None, version=None, roaming=False):
@@ -414,6 +424,10 @@ class AppDirs(object):
     @property
     def user_name(self):
         return user_name()
+
+    @property
+    def user_full_name(self):
+        return user_full_name()
 
     @property
     def user_data_dir(self):

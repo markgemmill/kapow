@@ -1,18 +1,15 @@
 import inspect
-from pathlib import Path
 import sys
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Callable
 from typing import ClassVar
 from typing import Union
+from . import confirm
 from . import handlers
-from .console import Console, console
+from .errors import LaunchError
 
 __version__ = "0.1.0"
-
-
-class LaunchError(Exception):
-    pass
 
 
 class Application:
@@ -44,7 +41,6 @@ class Application:
         name: str,
         version: str,
         context_class: ClassVar = SimpleNamespace,
-        console: Console = console,
         cli_handler: Union[bool, Callable, None] = True,
         env_handler: Union[bool, Callable, None] = True,
         appdir_handler: Union[bool, Callable, None] = True,
@@ -62,9 +58,10 @@ class Application:
         self.name = name
         self.version = version
         self.context_class = context_class
-        self.console = console
+        # these handlers are mandatory
         self.execute_handler = handlers.execute_handler
         self.error_handler = handlers.error_handler
+
         self._handlers = {}
         self._execution_order = []
 
@@ -94,47 +91,20 @@ class Application:
         self._add_handler("execute_handler", execute_handler, handlers.execute_handler)
 
         for name, handler in kwargs.items():
-            self._add_handler(name, handler)
+            if name.startswith("before_") or name.startswith("after_"):
+                self._add_handler(name, handler)
 
-    def assert_expr(self, expression_result: bool, assertion_message: str):
-        if expression_result is False:
-            raise LaunchError(assertion_message)
-
-    def assert_ctx_var(self, ctx, path, var_type):
-        var_path = []
-        root = ctx
-        for var in path.split("."):
-            var_path.append(var)
-            root = getattr(root, var, None)
-            if not root:
-                raise LaunchError(
-                    f"Context missing expected value at: {'.'.join(var_path)}."
-                )
-        if not isinstance(root, var_type):
-            raise LaunchError(
-                f"Expecting context variable {'.'.join(var_path)} to be type {var_type}. Found {type(root)}."
-            )
-
-    def assert_dir(self, dirpath: Path):
-        if dirpath.is_file():
-            dirpath = dirpath.parent
-        dirpath.mkdir(parents=True, exist_ok=True)
-
-    def assert_handler(self, handler, arg_len=2):
-        handler_sig: inspect.Signature = inspect.signature(handler)
-        param_cnt = len(handler_sig.parameters.keys())
-        if param_cnt != arg_len:
-            raise LaunchError(
-                f"A Launch handler callable must have {arg_len} arguments. `{handler.__name__}` has {param_cnt} arguements."
-            )
+        # for testing purposes
+        if "cli_args" in kwargs:
+            self._cli_args = kwargs["cli_args"]
 
     def _add_handler(self, name, handler, default=None):
 
+        # do not load the handler
         if handler is None:
             return
 
-        # there are x options for a handler
-        # a. native handler => value is true
+        # load the default handler
         if handler is True:
             if not default:
                 raise LaunchError("Using True requires a default handler.")
@@ -143,18 +113,18 @@ class Application:
             return
 
         if name == "error_handler" and handler is not None:
-            self.assert_handler(handler, 3)
+            confirm.error_func(handler)
             self.error_handler = handler
             return
 
         if name == "execute_handler" and handler is not None:
-            self.assert_handler(handler, 1)
+            confirm.command_func(handler)
             self.execute_handler = handler
             return
 
-        self.assert_handler(handler)
+        confirm.handler_func(handler)
 
-        # c. insert handler => value is callable named before/after....
+        # insert a user defined handler - before or after the named standard handler
         if name.startswith("before_") or name.startswith("after_"):
 
             index = 0
@@ -178,23 +148,17 @@ class Application:
 
             self._handlers[name] = handler
             self._execution_order.insert(insert_at + index, name)
+            return
 
-        # b. override handler => value is callable with existing name
-        elif callable(handler):
-            self._handlers[name] = handler
-            self._execution_order.append(name)
+        # load the default handler
+        self._handlers[name] = handler
+        self._execution_order.append(name)
 
-    def initialize(self, cli_args=None):
-        """
-        The primary use-case for initialize method is to provide a step
-        where we could easily pass cli arguments for testing.
-
-        :param cli_args: list of string values
-        :return: None
-        """
-        # TODO: do we really need this? We could just override self.cli_args
-        #  when we're testing
-        self.cli_args = cli_args if cli_args else sys.argv[1:]
+    @property
+    def cli_args(self):
+        if hasattr(self, '_cli_args'):
+            return self._cli_args
+        return sys.argv[1:]
 
     @property
     def main(self) -> Callable:

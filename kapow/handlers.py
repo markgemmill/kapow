@@ -1,17 +1,27 @@
 import logging
 import logging.config
 from importlib.resources import read_text
+from inspect import getmembers
+from inspect import isfunction
+from inspect import ismodule
 from os import environ
-from pathlib import Path, PosixPath, WindowsPath
+from pathlib import Path
+from pathlib import PosixPath
+from pathlib import WindowsPath
+from types import ModuleType
 from types import SimpleNamespace
 from typing import Any
 from typing import Callable
 from typing import Union
 import tomlkit
-from tomlkit import comment, document, nl, table
 from docopt import docopt
+from tomlkit import comment
+from tomlkit import document
+from tomlkit import table
+from . import confirm
 from . import resources
 from .appdirs import AppDirs
+from .console import console
 
 
 def cli_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
@@ -43,8 +53,8 @@ def appdir_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
     ctx.dirs.log_dir = appdirs.user_log_dir
     ctx.current_user = appdirs.user_name.lower()
 
-    app.assert_dir(ctx.dirs.app_home)
-    app.assert_dir(ctx.dirs.log_dir)
+    confirm.directory_exists(ctx.dirs.app_home)
+    confirm.directory_exists(ctx.dirs.log_dir)
 
     ctx.files = app.context_class()
     ctx.files.config = Path(ctx.dirs.app_home, f"{app.name}.config.ini")
@@ -66,7 +76,7 @@ def default_config_builder(ctx):
 
 def pre_config_handler(config_builder):
     def _pre_config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
-        app.assert_ctx_var(ctx, "files.config", (Path, PosixPath, WindowsPath))
+        confirm.ctx_var(ctx, "files.config", (Path, PosixPath, WindowsPath))
 
         if not ctx.files.config.exists():
             config_builder(ctx)
@@ -83,7 +93,7 @@ def config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
     :param ctx:
     :return:
     """
-    app.assert_expr(
+    confirm.expr(
         ctx.files.config.exists(), f"Config file does not exist: {ctx.files.config}"
     )
     ctx.config = tomlkit.loads(ctx.files.config.read_text())
@@ -134,7 +144,7 @@ def pre_logging_config_handler(logging_config_builder):
     def _pre_logging_config_handler(
         app: "Application", ctx: Union[SimpleNamespace, Any]
     ):
-        app.assert_ctx_var(ctx, "files.logging_config", (Path, PosixPath, WindowsPath))
+        confirm.ctx_var(ctx, "files.logging_config", (Path, PosixPath, WindowsPath))
 
         if not ctx.files.logging_config.exists():
             logging_config_builder(app, ctx)
@@ -149,7 +159,7 @@ def pre_logging_config_handler(logging_config_builder):
 
 def logging_config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
     # TODO: we need an option for pointing to an alternative logging config file
-    app.assert_ctx_var(ctx, "files.logging_config", (Path, PosixPath, WindowsPath))
+    confirm.ctx_var(ctx, "files.logging_config", (Path, PosixPath, WindowsPath))
 
     logging.config.fileConfig(ctx.files.logging_config)
     app.log = logging.getLogger(app.name)
@@ -178,21 +188,21 @@ def error_handler(app: "Application", ctx: Union[SimpleNamespace, Any], error):
     :return: None
 
     """
-    from rich.panel import Panel
-    from rich import box
     import traceback
+    from rich import box
+    from rich.panel import Panel
 
-    app.console.print(
+    console.print(
         f"\n  [green]{app.name}[/green] failed with error: [red]{error}[/red]\n"
     )
-    app.console.print(Panel(traceback.format_exc().strip(), box.SQUARE, highlight=True))
+    console.print(Panel(traceback.format_exc().strip(), box.SQUARE, highlight=True))
 
 
 # TODO: rename to main_handler?
 def execute_handler(app: "Application") -> Callable:
     """
     This is a special case handler that is the final function called
-    in the launcher pipeline. It is responsible for creating
+    in the kapower pipeline. It is responsible for creating
     the application's main function, which runs the application.
 
     It only takes an application reference, and is responsible for
@@ -222,3 +232,31 @@ def execute_handler(app: "Application") -> Callable:
             app.error_handler(app, context, ex)
 
     return _main
+
+
+def docopt_command_finder(cmd_obj: Union[ModuleType, Callable, SimpleNamespace]):
+    def match_func_name_to_cli_cmd(func_name, cli_args):
+        possible_names = [func_name]
+        possible_names.append(func_name.replace("_", "."))
+        possible_names.append(func_name.replace("_", "-"))
+        for name in possible_names:
+            if name in cli_args and cli_args[name] is True:
+                return True
+        return False
+
+    def _docopt_command_finder(app, ctx):
+        confirm.ctx_var(ctx, "cli_args", dict)
+
+        if isfunction(cmd_obj) or callable(cmd_obj):
+            app.command = cmd_obj
+
+        elif ismodule(cmd_obj) or isinstance(cmd_obj, SimpleNamespace):
+            functions = [f for f in getmembers(cmd_obj) if isfunction(f[1])]
+            for func_name, func_obj in functions:
+                if match_func_name_to_cli_cmd(func_name, ctx.cli_args):
+                    app.command = func_obj
+                    break
+
+        return app, ctx
+
+    return _docopt_command_finder

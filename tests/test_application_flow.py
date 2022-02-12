@@ -1,5 +1,5 @@
 from common import Handler
-from launch import Application
+from kapow import Application
 
 
 def test_application_():
@@ -26,19 +26,20 @@ def test_application_standard_execution_flow():
         appdir_handler=Handler("APPDIR", messages),
         config_handler=Handler("CONFIG", messages),
         context_handler=Handler("CONTEXT", messages),
+        pre_logging_config_handler=Handler("PRE-LOGGING", messages),
         logging_config_handler=Handler("LOGGING", messages),
         command_handler=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
     )
     app.main()
 
-    assert len(messages) == 8
     assert messages == [
         "CLI",
         "ENV",
         "APPDIR",
         "CONFIG",
         "CONTEXT",
+        "PRE-LOGGING",
         "LOGGING",
         "CMD HANDLER",
         "CMD CALLED",
@@ -61,8 +62,7 @@ def test_application_error_execution_flow():
     )
     app.main()
 
-    assert len(messages) == 2
-    assert messages == ["CLI", "ERR"]
+    assert messages == ["CLI", "ERR CLI raised an error"]
 
 
 def test_application_error_execution_flow_2():
@@ -75,23 +75,24 @@ def test_application_error_execution_flow_2():
         appdir_handler=Handler("APPDIR", messages),
         config_handler=Handler("CONFIG", messages),
         context_handler=Handler("CONTEXT", messages),
+        pre_logging_config_handler=Handler("PRE-LOGGING", messages),
         logging_config_handler=Handler("LOGGING", messages),
         command_handler=Handler("CMD", messages, raise_err=True).command(),
         error_handler=Handler("ERR", messages).error_handler(),
     )
     app.main()
 
-    assert len(messages) == 9
     assert messages == [
         "CLI",
         "ENV",
         "APPDIR",
         "CONFIG",
         "CONTEXT",
+        "PRE-LOGGING",
         "LOGGING",
         "CMD HANDLER",
         "CMD CALLED",
-        "ERR",
+        "ERR CMD raised an error",
     ]
 
 
@@ -105,14 +106,14 @@ def test_application_turn_off_handler():
         appdir_handler=None,
         config_handler=Handler("CONFIG", messages),
         context_handler=Handler("CONTEXT", messages),
+        pre_logging_config_handler=Handler("PRE-LOGGING", messages),
         logging_config_handler=Handler("LOGGING", messages),
         command_handler=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
     )
     app.main()
 
-    assert len(messages) == 5
-    assert messages == ["CONFIG", "CONTEXT", "LOGGING", "CMD HANDLER", "CMD CALLED"]
+    assert messages == ["CONFIG", "CONTEXT", "PRE-LOGGING", "LOGGING", "CMD HANDLER", "CMD CALLED"]
 
 
 def test_application_insert_before_after_handlers():
@@ -125,6 +126,7 @@ def test_application_insert_before_after_handlers():
         appdir_handler=None,
         config_handler=Handler("CONFIG", messages),
         context_handler=Handler("CONTEXT", messages),
+        pre_logging_config_handler=Handler("PRE-LOGGING", messages),
         logging_config_handler=Handler("LOGGING", messages),
         command_handler=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
@@ -134,11 +136,11 @@ def test_application_insert_before_after_handlers():
     )
     app.main()
 
-    assert len(messages) == 8
     assert messages == [
         "BEFORE CONFIG",
         "CONFIG",
         "CONTEXT",
+        "PRE-LOGGING",
         "LOGGING",
         "AFTER LOGGING",
         "CMD HANDLER",
