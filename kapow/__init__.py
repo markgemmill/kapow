@@ -9,7 +9,7 @@ from . import confirm
 from . import handlers
 from .errors import LaunchError
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 class Application:
@@ -156,7 +156,7 @@ class Application:
 
     @property
     def cli_args(self):
-        if hasattr(self, '_cli_args'):
+        if hasattr(self, "_cli_args"):
             return self._cli_args
         return sys.argv[1:]
 

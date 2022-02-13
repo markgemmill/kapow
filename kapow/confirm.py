@@ -5,7 +5,6 @@ from typing import Callable
 from .errors import LaunchError
 
 
-
 def expr(expression_result: bool, assertion_message: str):
     if expression_result is False:
         raise LaunchError(assertion_message)

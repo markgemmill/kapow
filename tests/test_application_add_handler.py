@@ -96,7 +96,7 @@ def test_application_docopt_cli_handler():
         command_handler=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
         after_cli_handler=Handler("CLI ARGS", messages, func=capture_cli_args),
-        cli_args="run --debug".split(" ")
+        cli_args="run --debug".split(" "),
     )
 
     app.main()

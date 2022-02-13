@@ -65,7 +65,7 @@ addopts = "--verbose --cov=kapow tests"
 testpaths = ["tests"]
 
 [tool.coverage.run]
-omit = ['kapow/appdirs.py']
+omit = ['kapow/appdirs.py', 'kapow/cli/*']
 
 [tool.coverage.report]
 show_missing=true

@@ -113,7 +113,14 @@ def test_application_turn_off_handler():
     )
     app.main()
 
-    assert messages == ["CONFIG", "CONTEXT", "PRE-LOGGING", "LOGGING", "CMD HANDLER", "CMD CALLED"]
+    assert messages == [
+        "CONFIG",
+        "CONTEXT",
+        "PRE-LOGGING",
+        "LOGGING",
+        "CMD HANDLER",
+        "CMD CALLED",
+    ]
 
 
 def test_application_insert_before_after_handlers():

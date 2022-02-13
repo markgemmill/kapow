@@ -57,6 +57,7 @@ def user_full_name():
         return None
     else:
         import pwd
+
         uid = pwd.getpwuid(os.getuid())
         return uid.pw_gecos
 

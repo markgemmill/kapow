@@ -9,25 +9,27 @@ Options:
 """
 from pathlib import Path
 from types import SimpleNamespace
-from rich.prompt import Prompt, Confirm
-from ..console import console
+from rich.prompt import Confirm
+from rich.prompt import Prompt
 from ..appdirs import user_full_name
+from ..console import console
 from . import project
 
 
 def init(ctx):
     ns = SimpleNamespace()
 
-    ns.project_dir = Path(ctx.cli_args['PATH']).resolve()
+    ns.project_dir = Path(ctx.cli_args["PATH"]).resolve()
 
     pname = ns.project_dir.stem
 
     ns.project_name = Prompt.ask("Project name", default=pname)
     ns.author_name = Prompt.ask("Author name", default=user_full_name())
     ns.author_email = Prompt.ask("Author email", default="")
-    ns.project_type = Prompt.ask("Packaging", choices=['setup', 'poetry'], default='poetry')
+    ns.project_type = Prompt.ask(
+        "Packaging", choices=["setup", "poetry"], default="poetry"
+    )
     ns.src_dir = Confirm.ask("Use src dir?", default=False)
-
 
     console.print("\nProject details:")
     console.print(f"  name: [green]{ns.project_name}[/green]")
