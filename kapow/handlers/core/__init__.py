@@ -1,40 +1,21 @@
 import logging
-import logging.config
 from importlib.resources import read_text
-from inspect import getmembers
-from inspect import isfunction
-from inspect import ismodule
 from os import environ
-from pathlib import Path
-from pathlib import PosixPath
-from pathlib import WindowsPath
-from types import ModuleType
+from pathlib import Path, PosixPath, WindowsPath
 from types import SimpleNamespace
-from typing import Any
-from typing import Callable
-from typing import Union
+from typing import Union, Any, Callable
+
 import tomlkit
-from docopt import docopt
-from tomlkit import comment
-from tomlkit import document
-from tomlkit import table
-from . import confirm
-from . import resources
-from .appdirs import AppDirs
-from .console import console
+from tomlkit import document, comment, table
+
+from kapow import confirm, resources
+from kapow.appdirs import AppDirs
+from kapow.console import console
 
 
 def cli_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
     ctx.cli_args = app.cli_args
     return app, ctx
-
-
-def docopt_handler(docs):
-    def _docopt_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
-        ctx.cli_args = docopt(docs, app.cli_args, version=app.version)
-        return app, ctx
-
-    return _docopt_handler
 
 
 def env_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
@@ -74,48 +55,31 @@ def default_config_builder(ctx):
     ctx.files.config.write_text(tomlkit.dumps(doc))
 
 
-def pre_config_handler(config_builder):
-    def _pre_config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
-        confirm.ctx_var(ctx, "files.config", (Path, PosixPath, WindowsPath))
+def default_cfg_writer(ctx):
+    ctx.files.config.touch()
+
+
+def default_cfg_validator(config):
+    pass
+
+
+def config_handler_factory(config_writer=default_cfg_writer, config_validator=default_cfg_validator):
+
+    def _config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
+
+        confirm.ctx_var(ctx, "files", (Path, PosixPath, WindowsPath))
+        ctx.files.config = Path(ctx.dirs.app_home, f"{app.name}.config.ini")
 
         if not ctx.files.config.exists():
-            config_builder(ctx)
-        return app, ctx
+            config_writer(ctx)
 
-    return _pre_config_handler
+        ctx.config = tomlkit.loads(ctx.files.config.read_text())
 
-
-def config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
-    """
-    Reads toml config file format.
-
-    :param app:
-    :param ctx:
-    :return:
-    """
-    confirm.expr(
-        ctx.files.config.exists(), f"Config file does not exist: {ctx.files.config}"
-    )
-    ctx.config = tomlkit.loads(ctx.files.config.read_text())
-    return app, ctx
-
-
-def post_config_handler(config_validator):
-    """
-    Using the provided config_validator, validate the config data.
-
-    config_validator should raise a LaunchError indicating the issue with the config data.
-
-    :param config_validator:
-    :return: Application, Context
-
-    """
-
-    def _post_config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
         config_validator(ctx.config)
+
         return app, ctx
 
-    return _post_config_handler
+    return _config_handler
 
 
 def context_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
@@ -167,12 +131,12 @@ def logging_config_handler(app: "Application", ctx: Union[SimpleNamespace, Any])
     return app, ctx
 
 
-def command_handler(command_finder: Callable) -> Callable:
-    def _command_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
+def command_finder(command_finder: Callable) -> Callable:
+    def _command_finder(app: "Application", ctx: Union[SimpleNamespace, Any]):
         app.command = command_finder(ctx)
         return app, ctx
 
-    return _command_handler
+    return _command_finder
 
 
 def error_handler(app: "Application", ctx: Union[SimpleNamespace, Any], error):
@@ -198,8 +162,7 @@ def error_handler(app: "Application", ctx: Union[SimpleNamespace, Any], error):
     console.print(Panel(traceback.format_exc().strip(), box.SQUARE, highlight=True))
 
 
-# TODO: rename to main_handler?
-def execute_handler(app: "Application") -> Callable:
+def main_factory(app: "Application") -> Callable:
     """
     This is a special case handler that is the final function called
     in the kapower pipeline. It is responsible for creating
@@ -232,31 +195,3 @@ def execute_handler(app: "Application") -> Callable:
             app.error_handler(app, context, ex)
 
     return _main
-
-
-def docopt_command_finder(cmd_obj: Union[ModuleType, Callable, SimpleNamespace]):
-    def match_func_name_to_cli_cmd(func_name, cli_args):
-        possible_names = [func_name]
-        possible_names.append(func_name.replace("_", "."))
-        possible_names.append(func_name.replace("_", "-"))
-        for name in possible_names:
-            if name in cli_args and cli_args[name] is True:
-                return True
-        return False
-
-    def _docopt_command_finder(app, ctx):
-        confirm.ctx_var(ctx, "cli_args", dict)
-
-        if isfunction(cmd_obj) or callable(cmd_obj):
-            app.command = cmd_obj
-
-        elif ismodule(cmd_obj) or isinstance(cmd_obj, SimpleNamespace):
-            functions = [f for f in getmembers(cmd_obj) if isfunction(f[1])]
-            for func_name, func_obj in functions:
-                if match_func_name_to_cli_cmd(func_name, ctx.cli_args):
-                    app.command = func_obj
-                    break
-
-        return app, ctx
-
-    return _docopt_command_finder

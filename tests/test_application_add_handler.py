@@ -1,8 +1,10 @@
 import pytest
+
+import kapow.handlers.core
 from common import Handler
 from kapow import Application
 from kapow import LaunchError
-from kapow.handlers import docopt_handler
+from kapow.handlers.docopt import docopt_handler
 
 
 def test_application_add_handler_invalid_function():
@@ -93,7 +95,7 @@ def test_application_docopt_cli_handler():
         config_handler=Handler("CONFIG", messages),
         context_handler=Handler("CONTEXT", messages),
         logging_config_handler=Handler("LOGGING", messages),
-        command_handler=Handler("CMD", messages).command(),
+        command_finder=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
         after_cli_handler=Handler("CLI ARGS", messages, func=capture_cli_args),
         cli_args="run --debug".split(" "),
@@ -119,7 +121,7 @@ def alt_execute_handler(app):
         try:
             app.command(context)
         except Exception as ex:
-            app.error_handler(app, context, ex)
+            kapow.handlers.core.error_handler(app, context, ex)
 
     return _execution
 
@@ -131,8 +133,8 @@ def test_application_alt_execute_handler():
     app = Application(
         "test",
         "0.1.0",
-        command_handler=Handler("CMD", messages).command(),
-        execute_handler=alt_execute_handler,
+        command_finder=Handler("CMD", messages).command(),
+        main_factory=alt_execute_handler,
     )
 
     app.main()

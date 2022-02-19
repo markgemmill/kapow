@@ -5,6 +5,8 @@ from types import SimpleNamespace
 from typing import Callable
 from typing import ClassVar
 from typing import Union
+
+import kapow.handlers.core
 from . import confirm
 from . import handlers
 from .errors import LaunchError
@@ -41,54 +43,58 @@ class Application:
         name: str,
         version: str,
         context_class: ClassVar = SimpleNamespace,
+
         cli_handler: Union[bool, Callable, None] = True,
         env_handler: Union[bool, Callable, None] = True,
         appdir_handler: Union[bool, Callable, None] = True,
-        pre_config_handler: Union[Callable, None] = None,
+
         config_handler: Union[bool, Callable, None] = True,
-        post_config_handler: Union[Callable, None] = None,
+
         context_handler: Union[bool, Callable, None] = True,
+
         pre_logging_config_handler: Union[bool, Callable, None] = True,
         logging_config_handler: Union[bool, Callable, None] = True,
-        command_handler: Union[bool, Callable, None] = True,
+
+        command_finder: Union[bool, Callable, None] = True,
+
         error_handler: Union[Callable, None] = None,
-        execute_handler: Union[Callable, None] = None,
+        main_factory: Union[Callable, None] = None,
+
         **kwargs,
+
     ):
         self.name = name
         self.version = version
         self.context_class = context_class
         # these handlers are mandatory
-        self.execute_handler = handlers.execute_handler
-        self.error_handler = handlers.error_handler
+        self.main_factory = kapow.handlers.core.main_factory
+        self.error_handler = kapow.handlers.core.error_handler
 
         self._handlers = {}
         self._execution_order = []
 
-        self._add_handler("cli_handler", cli_handler, handlers.cli_handler)
-        self._add_handler("env_handler", env_handler, handlers.env_handler)
-        self._add_handler("appdir_handler", appdir_handler, handlers.appdir_handler)
-        self._add_handler("pre_config_handler", pre_config_handler)
-        self._add_handler("config_handler", config_handler, handlers.config_handler)
-        self._add_handler("post_config_handler", post_config_handler)
-        self._add_handler("context_handler", context_handler, handlers.context_handler)
+        self._add_handler("cli_handler", cli_handler, kapow.handlers.core.cli_handler)
+        self._add_handler("env_handler", env_handler, kapow.handlers.core.env_handler)
+        self._add_handler("appdir_handler", appdir_handler, kapow.handlers.core.appdir_handler)
+        self._add_handler("config_handler", config_handler, kapow.handlers.core.config_handler_factory())
+        self._add_handler("context_handler", context_handler, kapow.handlers.core.context_handler)
         self._add_handler(
             "pre_logging_config_handler",
             pre_logging_config_handler,
-            handlers.pre_logging_config_handler(
-                handlers.default_logging_config_builder
+            kapow.handlers.core.pre_logging_config_handler(
+                kapow.handlers.core.default_logging_config_builder
             ),
         )
         self._add_handler(
             "logging_config_handler",
             logging_config_handler,
-            handlers.logging_config_handler,
+            kapow.handlers.core.logging_config_handler,
         )
-        self._add_handler("command_handler", command_handler, handlers.command_handler)
+        self._add_handler("command_handler", command_finder, kapow.handlers.core.command_finder)
 
         # special case
-        self._add_handler("error_handler", error_handler, handlers.error_handler)
-        self._add_handler("execute_handler", execute_handler, handlers.execute_handler)
+        self._add_handler("error_handler", error_handler, kapow.handlers.core.error_handler)
+        self._add_handler("main_factory", main_factory, kapow.handlers.core.main_factory)
 
         for name, handler in kwargs.items():
             if name.startswith("before_") or name.startswith("after_"):
@@ -117,9 +123,9 @@ class Application:
             self.error_handler = handler
             return
 
-        if name == "execute_handler" and handler is not None:
+        if name == "main_factory" and handler is not None:
             confirm.command_func(handler)
-            self.execute_handler = handler
+            self.main_factory = handler
             return
 
         confirm.handler_func(handler)
@@ -166,4 +172,4 @@ class Application:
 
         :return: main function
         """
-        return self.execute_handler(self)
+        return self.main_factory(self)

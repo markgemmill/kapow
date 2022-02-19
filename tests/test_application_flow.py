@@ -10,7 +10,7 @@ def test_application_():
         app.command = command
         return app, ctx
 
-    app = Application("test", "0.1.0", command_handler=command_handler_func)
+    app = Application("test", "0.1.0", command_finder=command_handler_func)
     assert app.name == "test"
     assert app.version == "0.1.0"
     app.main()
@@ -28,7 +28,7 @@ def test_application_standard_execution_flow():
         context_handler=Handler("CONTEXT", messages),
         pre_logging_config_handler=Handler("PRE-LOGGING", messages),
         logging_config_handler=Handler("LOGGING", messages),
-        command_handler=Handler("CMD", messages).command(),
+        command_finder=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
     )
     app.main()
@@ -57,7 +57,7 @@ def test_application_error_execution_flow():
         config_handler=Handler("CONFIG", messages),
         context_handler=Handler("CONTEXT", messages),
         logging_config_handler=Handler("LOGGING", messages),
-        command_handler=Handler("CMD", messages).command(),
+        command_finder=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
     )
     app.main()
@@ -77,7 +77,7 @@ def test_application_error_execution_flow_2():
         context_handler=Handler("CONTEXT", messages),
         pre_logging_config_handler=Handler("PRE-LOGGING", messages),
         logging_config_handler=Handler("LOGGING", messages),
-        command_handler=Handler("CMD", messages, raise_err=True).command(),
+        command_finder=Handler("CMD", messages, raise_err=True).command(),
         error_handler=Handler("ERR", messages).error_handler(),
     )
     app.main()
@@ -108,7 +108,7 @@ def test_application_turn_off_handler():
         context_handler=Handler("CONTEXT", messages),
         pre_logging_config_handler=Handler("PRE-LOGGING", messages),
         logging_config_handler=Handler("LOGGING", messages),
-        command_handler=Handler("CMD", messages).command(),
+        command_finder=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
     )
     app.main()
@@ -135,7 +135,7 @@ def test_application_insert_before_after_handlers():
         context_handler=Handler("CONTEXT", messages),
         pre_logging_config_handler=Handler("PRE-LOGGING", messages),
         logging_config_handler=Handler("LOGGING", messages),
-        command_handler=Handler("CMD", messages).command(),
+        command_finder=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
         before_config_handler=Handler("BEFORE CONFIG", messages),
         after_logging_config_handler=Handler("AFTER LOGGING", messages),

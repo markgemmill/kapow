@@ -1,4 +1,7 @@
 import logging
+
+import kapow.handlers.core
+import kapow.handlers.docopt
 from kapow import Application
 from kapow import handlers
 
@@ -43,12 +46,12 @@ def find_command(ctx):
 app = Application(
     name="appy",
     version="0.1.0",
-    cli_handler=handlers.docopt_handler(CLI),
+    cli_handler=kapow.handlers.docopt.docopt_handler(CLI),
     env_handler=None,
-    pre_config_handler=handlers.pre_config_handler(handlers.default_config_builder),
-    config_handler=handlers.config_handler,
-    post_config_handler=handlers.post_config_handler(validate_configuration),
-    command_handler=handlers.command_handler(find_command),
+    pre_config_handler=kapow.handlers.core.pre_config_handler(kapow.handlers.core.default_config_builder),
+    config_handler=kapow.handlers.core.config_handler,
+    post_config_handler=kapow.handlers.core.post_config_handler(validate_configuration),
+    command_finder=kapow.handlers.core.command_finder(find_command),
 )
 
 if __name__ == "__main__":
