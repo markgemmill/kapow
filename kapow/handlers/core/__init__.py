@@ -38,9 +38,6 @@ def appdir_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
     confirm.directory_exists(ctx.dirs.log_dir)
 
     ctx.files = app.context_class()
-    ctx.files.config = Path(ctx.dirs.app_home, f"{app.name}.config.ini")
-    ctx.files.logging_config = Path(ctx.dirs.app_home, f"{app.name}.logging.ini")
-    ctx.files.log_file = Path(ctx.dirs.log_dir, f"{app.name}.logs.txt")
 
     return app, ctx
 
@@ -104,11 +101,13 @@ def default_logging_config_builder(app, ctx):
     )
 
 
-def pre_logging_config_handler(logging_config_builder):
-    def _pre_logging_config_handler(
-        app: "Application", ctx: Union[SimpleNamespace, Any]
-    ):
-        confirm.ctx_var(ctx, "files.logging_config", (Path, PosixPath, WindowsPath))
+def logging_config_factory(logging_config_builder=default_logging_config_builder):
+
+    def logging_config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
+        # TODO: we need an option for pointing to an alternative logging config file
+        confirm.ctx_var(ctx, "files", (Path, PosixPath, WindowsPath))
+        ctx.files.logging_config = Path(ctx.dirs.app_home, f"{app.name}.logging.ini")
+        ctx.files.log_file = Path(ctx.dirs.log_dir, f"{app.name}.logs.txt")
 
         if not ctx.files.logging_config.exists():
             logging_config_builder(app, ctx)
@@ -116,19 +115,12 @@ def pre_logging_config_handler(logging_config_builder):
         if not ctx.files.log_file.exists():
             ctx.files.log_file.write_text("")
 
+        logging.config.fileConfig(ctx.files.logging_config)
+        app.log = logging.getLogger(app.name)
+
         return app, ctx
 
-    return _pre_logging_config_handler
-
-
-def logging_config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
-    # TODO: we need an option for pointing to an alternative logging config file
-    confirm.ctx_var(ctx, "files.logging_config", (Path, PosixPath, WindowsPath))
-
-    logging.config.fileConfig(ctx.files.logging_config)
-    app.log = logging.getLogger(app.name)
-
-    return app, ctx
+    return logging_config_handler
 
 
 def command_finder(command_finder: Callable) -> Callable:

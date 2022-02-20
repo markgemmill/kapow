@@ -52,7 +52,6 @@ class Application:
 
         context_handler: Union[bool, Callable, None] = True,
 
-        pre_logging_config_handler: Union[bool, Callable, None] = True,
         logging_config_handler: Union[bool, Callable, None] = True,
 
         command_finder: Union[bool, Callable, None] = True,
@@ -79,16 +78,9 @@ class Application:
         self._add_handler("config_handler", config_handler, kapow.handlers.core.config_handler_factory())
         self._add_handler("context_handler", context_handler, kapow.handlers.core.context_handler)
         self._add_handler(
-            "pre_logging_config_handler",
-            pre_logging_config_handler,
-            kapow.handlers.core.pre_logging_config_handler(
-                kapow.handlers.core.default_logging_config_builder
-            ),
-        )
-        self._add_handler(
             "logging_config_handler",
             logging_config_handler,
-            kapow.handlers.core.logging_config_handler,
+            kapow.handlers.core.logging_config_factory(),
         )
         self._add_handler("command_handler", command_finder, kapow.handlers.core.command_finder)
 
