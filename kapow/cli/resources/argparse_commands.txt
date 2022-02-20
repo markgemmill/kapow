@@ -1,0 +1,39 @@
+"""
+Usage:
+  {appname} run [--name=NAME]
+
+Options:
+  --name=NAME    Say hello to this person. [default: buddy]
+  -h --help      Show this help message.
+  -v --version   Show app version.
+
+"""
+import argparse
+from kapow.console import console
+from {appname} import __version__
+
+
+def run(ctx):
+    name = ctx.cli_args.name
+    console.print(f"Hello [yellow]{{name}}[/yellow][red]!!![/red]")
+
+
+def create_parser():
+    cli_parser = argparse.ArgumentParser(prog="{appname}")
+    cli_parser.add_argument('--version', action='version', version="{appname} v{{__version__}}")
+
+    def show_help(ctx):
+        cli_parser.print_help()
+
+    cli_parser.set_defaults(command=show_help)
+
+    # root subparser
+    subparsers = cli_parser.add_subparsers(title="subcommands")
+
+    # define the "run" command
+    run_parser = subparsers.add_parser("run", help="Say hello.")
+    run_parser.add_argument("--name", type=str, help="Person to say hello too.", default='buddy')
+    # attach our actual run function to the command
+    run_parser.set_defaults(command=run)
+
+    return cli_parser

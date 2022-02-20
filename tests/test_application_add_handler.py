@@ -1,7 +1,6 @@
 import pytest
-
-import kapow.handlers.core
 from common import Handler
+import kapow.handlers.core
 from kapow import Application
 from kapow import LaunchError
 from kapow.handlers.docopt import docopt_handler

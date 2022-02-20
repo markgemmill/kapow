@@ -1,14 +1,19 @@
 import logging
 from importlib.resources import read_text
 from os import environ
-from pathlib import Path, PosixPath, WindowsPath
+from pathlib import Path
+from pathlib import PosixPath
+from pathlib import WindowsPath
 from types import SimpleNamespace
-from typing import Union, Any, Callable
-
+from typing import Any
+from typing import Callable
+from typing import Union
 import tomlkit
-from tomlkit import document, comment, table
-
-from kapow import confirm, resources
+from tomlkit import comment
+from tomlkit import document
+from tomlkit import table
+from kapow import confirm
+from kapow import resources
 from kapow.appdirs import AppDirs
 from kapow.console import console
 
@@ -60,8 +65,9 @@ def default_cfg_validator(config):
     pass
 
 
-def config_handler_factory(config_writer=default_cfg_writer, config_validator=default_cfg_validator):
-
+def config_handler_factory(
+    config_writer=default_cfg_writer, config_validator=default_cfg_validator
+):
     def _config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
 
         confirm.ctx_var(ctx, "files", (Path, PosixPath, WindowsPath))
@@ -102,7 +108,6 @@ def default_logging_config_builder(app, ctx):
 
 
 def logging_config_factory(logging_config_builder=default_logging_config_builder):
-
     def logging_config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
         # TODO: we need an option for pointing to an alternative logging config file
         confirm.ctx_var(ctx, "files", (Path, PosixPath, WindowsPath))

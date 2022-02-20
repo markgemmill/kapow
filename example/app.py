@@ -1,5 +1,4 @@
 import logging
-
 import kapow.handlers.core
 import kapow.handlers.docopt
 from kapow import Application
@@ -48,7 +47,9 @@ app = Application(
     version="0.1.0",
     cli_handler=kapow.handlers.docopt.docopt_handler(CLI),
     env_handler=None,
-    pre_config_handler=kapow.handlers.core.pre_config_handler(kapow.handlers.core.default_config_builder),
+    pre_config_handler=kapow.handlers.core.pre_config_handler(
+        kapow.handlers.core.default_config_builder
+    ),
     config_handler=kapow.handlers.core.config_handler,
     post_config_handler=kapow.handlers.core.post_config_handler(validate_configuration),
     command_finder=kapow.handlers.core.command_finder(find_command),

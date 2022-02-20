@@ -90,8 +90,13 @@ def generate(ctx: GenerateContext):
         # generate file content
         create_poetry_pyproject(ctx, pyproject_file)
         file_from_template(ctx, init_py, "init.txt")
-        file_from_template(ctx, cli_file, "cli.txt")
-        file_from_template(ctx, commands_file, "commands.txt")
+
+        if ctx.cli_parser == "docopt":
+            file_from_template(ctx, cli_file, "cli.txt")
+            file_from_template(ctx, commands_file, "commands.txt")
+        elif ctx.cli_parser == "argparse":
+            file_from_template(ctx, cli_file, "argparse_cli.txt")
+            file_from_template(ctx, commands_file, "argparse_commands.txt")
 
         readme_file.touch()
 

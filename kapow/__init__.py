@@ -5,7 +5,6 @@ from types import SimpleNamespace
 from typing import Callable
 from typing import ClassVar
 from typing import Union
-
 import kapow.handlers.core
 from . import confirm
 from . import handlers
@@ -43,24 +42,16 @@ class Application:
         name: str,
         version: str,
         context_class: ClassVar = SimpleNamespace,
-
         cli_handler: Union[bool, Callable, None] = True,
         env_handler: Union[bool, Callable, None] = True,
         appdir_handler: Union[bool, Callable, None] = True,
-
         config_handler: Union[bool, Callable, None] = True,
-
         context_handler: Union[bool, Callable, None] = True,
-
         logging_config_handler: Union[bool, Callable, None] = True,
-
         command_finder: Union[bool, Callable, None] = True,
-
         error_handler: Union[Callable, None] = None,
         main_factory: Union[Callable, None] = None,
-
         **kwargs,
-
     ):
         self.name = name
         self.version = version
@@ -74,19 +65,33 @@ class Application:
 
         self._add_handler("cli_handler", cli_handler, kapow.handlers.core.cli_handler)
         self._add_handler("env_handler", env_handler, kapow.handlers.core.env_handler)
-        self._add_handler("appdir_handler", appdir_handler, kapow.handlers.core.appdir_handler)
-        self._add_handler("config_handler", config_handler, kapow.handlers.core.config_handler_factory())
-        self._add_handler("context_handler", context_handler, kapow.handlers.core.context_handler)
+        self._add_handler(
+            "appdir_handler", appdir_handler, kapow.handlers.core.appdir_handler
+        )
+        self._add_handler(
+            "config_handler",
+            config_handler,
+            kapow.handlers.core.config_handler_factory(),
+        )
+        self._add_handler(
+            "context_handler", context_handler, kapow.handlers.core.context_handler
+        )
         self._add_handler(
             "logging_config_handler",
             logging_config_handler,
             kapow.handlers.core.logging_config_factory(),
         )
-        self._add_handler("command_handler", command_finder, kapow.handlers.core.command_finder)
+        self._add_handler(
+            "command_handler", command_finder, kapow.handlers.core.command_finder
+        )
 
         # special case
-        self._add_handler("error_handler", error_handler, kapow.handlers.core.error_handler)
-        self._add_handler("main_factory", main_factory, kapow.handlers.core.main_factory)
+        self._add_handler(
+            "error_handler", error_handler, kapow.handlers.core.error_handler
+        )
+        self._add_handler(
+            "main_factory", main_factory, kapow.handlers.core.main_factory
+        )
 
         for name, handler in kwargs.items():
             if name.startswith("before_") or name.startswith("after_"):

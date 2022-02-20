@@ -30,6 +30,9 @@ def init(ctx):
         "Packaging", choices=["setup", "poetry"], default="poetry"
     )
     ns.src_dir = Confirm.ask("Use src dir?", default=False)
+    ns.cli_parser = Confirm.ask(
+        "CLI Parser", choices=["argparse", "docopt"], default="argparse"
+    )
 
     console.print("\nProject details:")
     console.print(f"  name: [green]{ns.project_name}[/green]")
@@ -39,6 +42,7 @@ def init(ctx):
         console.print("  use src dir: [green]yes[/green]")
     else:
         console.print("  use src dir: [red]no[/red]")
+    console.print(f"  cli parser: [green]{ns.cli_parser}[/green]")
     console.print()
 
     if Confirm.ask("Generate project"):

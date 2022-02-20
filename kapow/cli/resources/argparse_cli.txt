@@ -1,15 +1,16 @@
 from kapow import Application
-from kapow.handlers import docopt as dopt
+from kapow.handlers import argparse as ap
+from . import __version__
 from . import commands
 
 app = Application(
-    name="kapow",
+    name="{appname}",
     version="__version__",
-    cli_handler=dopt.docopt_handler(commands.__doc__),
+    cli_handler=ap.argparse_handler(commands.create_parser()),
     config_handler=None,
     logging_config_handler=None,
     context_handler=None,
-    command_finder=dopt.docopt_command_finder(commands),
+    command_finder=ap.argparse_command_finder,
 )
 
 main = app.main
