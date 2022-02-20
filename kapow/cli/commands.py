@@ -30,7 +30,7 @@ def init(ctx):
         "Packaging", choices=["setup", "poetry"], default="poetry"
     )
     ns.src_dir = Confirm.ask("Use src dir?", default=False)
-    ns.cli_parser = Confirm.ask(
+    ns.cli_parser = Prompt.ask(
         "CLI Parser", choices=["argparse", "docopt"], default="argparse"
     )
 
