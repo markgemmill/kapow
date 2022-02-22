@@ -32,3 +32,17 @@ class Handler:
             self.messages.append(f"{self.name} {error}")
 
         return __command
+
+
+CLI_DOCS = """test v0.1.0
+
+Usage:
+  test run [--debug]
+  test --help
+  test --version
+
+Options:
+  --debug        Run in debug mode.
+  -h --help      Show this help message.
+  -v --version   Show app version.
+"""

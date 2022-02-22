@@ -132,7 +132,7 @@ def test_application_insert_before_after_handlers():
         error_handler=Handler("ERR", messages).error_handler(),
         before_config_handler=Handler("BEFORE CONFIG", messages),
         after_logging_config_handler=Handler("AFTER LOGGING", messages),
-        after_command_handler=Handler("AFTER CMD", messages),
+        after_command_finder=Handler("AFTER CMD", messages),
     )
     app.main()
 

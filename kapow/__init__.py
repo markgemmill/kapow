@@ -1,13 +1,13 @@
-import inspect
 import sys
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Callable
 from typing import ClassVar
 from typing import Union
+from typing import List
 import kapow.handlers.core
 from . import confirm
 from . import handlers
+from .appdirs import AppDirs
 from .errors import LaunchError
 
 __version__ = "0.2.1"
@@ -42,13 +42,15 @@ class Application:
         name: str,
         version: str,
         context_class: ClassVar = SimpleNamespace,
+        appdirs_class: ClassVar = AppDirs,
         cli_handler: Union[bool, Callable, None] = True,
         env_handler: Union[bool, Callable, None] = True,
         appdir_handler: Union[bool, Callable, None] = True,
         config_handler: Union[bool, Callable, None] = True,
         context_handler: Union[bool, Callable, None] = True,
         logging_config_handler: Union[bool, Callable, None] = True,
-        command_finder: Union[bool, Callable, None] = True,
+        command_finder: Union[Callable, None] = None,
+        command_func: Union[Callable, None] = None,
         error_handler: Union[Callable, None] = None,
         main_factory: Union[Callable, None] = None,
         **kwargs,
@@ -56,6 +58,7 @@ class Application:
         self.name = name
         self.version = version
         self.context_class = context_class
+        self.appdirs_class = appdirs_class
         # these handlers are mandatory
         self.main_factory = kapow.handlers.core.main_factory
         self.error_handler = kapow.handlers.core.error_handler
@@ -81,9 +84,14 @@ class Application:
             logging_config_handler,
             kapow.handlers.core.logging_config_factory(),
         )
-        self._add_handler(
-            "command_handler", command_finder, kapow.handlers.core.command_finder
-        )
+
+        if callable(command_func) and callable(command_finder):
+            raise LaunchError("Cannot provide a command and a command finder function to the kapow.Application object.")
+
+        if callable(command_func):
+            self._add_handler("command_finder", kapow.handlers.core.command_finder(command_func))
+        else:
+            self._add_handler("command_finder", command_finder)
 
         # special case
         self._add_handler(
@@ -97,9 +105,7 @@ class Application:
             if name.startswith("before_") or name.startswith("after_"):
                 self._add_handler(name, handler)
 
-        # for testing purposes
-        if "cli_args" in kwargs:
-            self._cli_args = kwargs["cli_args"]
+        self._cli_args = None
 
     def _add_handler(self, name, handler, default=None):
 
@@ -159,9 +165,26 @@ class Application:
 
     @property
     def cli_args(self):
-        if hasattr(self, "_cli_args"):
+        if hasattr(self, "_cli_args") and self._cli_args:
             return self._cli_args
         return sys.argv[1:]
+
+    @cli_args.setter
+    def cli_args(self, value):
+        self._cli_args = value
+
+    def initialize(self, cli_args: List[str]=None, appdirs_class: ClassVar=None):
+        """
+        This is primarily used for test purposes.
+
+        :param cli_args:
+        :return: None
+        """
+        if cli_args:
+            self.cli_args = cli_args
+
+        if appdirs_class:
+            self.appdirs_class = appdirs_class
 
     @property
     def main(self) -> Callable:

@@ -4,6 +4,7 @@ import kapow.handlers.core
 from kapow import Application
 from kapow import LaunchError
 from kapow.handlers.docopt import docopt_handler
+from tests.common import CLI_DOCS
 
 
 def test_application_add_handler_invalid_function():
@@ -63,20 +64,6 @@ def test_application_add_handler_insert_before_non_existing_handler():
     )
 
 
-CLI_DOCS = """test v0.1.0
-
-Usage:
-  test run [--debug]
-  test --help
-  test --version
-
-Options:
-  --debug        Run in debug mode.
-  -h --help      Show this help message.
-  -v --version   Show app version.
-"""
-
-
 def test_application_docopt_cli_handler():
 
     messages = []
@@ -97,10 +84,12 @@ def test_application_docopt_cli_handler():
         command_finder=Handler("CMD", messages).command(),
         error_handler=Handler("ERR", messages).error_handler(),
         after_cli_handler=Handler("CLI ARGS", messages, func=capture_cli_args),
-        cli_args="run --debug".split(" "),
     )
 
+    app.initialize(cli_args="run --debug".split(" "))
+
     app.main()
+
 
     assert messages[0] == "CLI ARGS"
     assert messages[1] == "CLI> run: True"
@@ -114,7 +103,7 @@ def alt_execute_handler(app):
     def _execution():
         nonlocal app
         context = app.context_class()
-        handler = app._handlers["command_handler"]
+        handler = app._handlers["command_finder"]
         app, context = handler(app, context)
 
         try:

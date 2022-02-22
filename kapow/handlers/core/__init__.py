@@ -1,9 +1,8 @@
 import logging
+import logging.config
 from importlib.resources import read_text
 from os import environ
 from pathlib import Path
-from pathlib import PosixPath
-from pathlib import WindowsPath
 from types import SimpleNamespace
 from typing import Any
 from typing import Callable
@@ -33,7 +32,7 @@ def env_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
 
 
 def appdir_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
-    appdirs = AppDirs(app.name)
+    appdirs = app.appdirs_class(app.name)
     ctx.dirs = app.context_class()
     ctx.dirs.app_home = appdirs.user_data_dir
     ctx.dirs.log_dir = appdirs.user_log_dir
@@ -47,18 +46,15 @@ def appdir_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
     return app, ctx
 
 
-def default_config_builder(ctx):
+def default_cfg_writer(ctx):
     doc = document()
-    doc.add(comment("default toml configuration file"))
+    doc.add(comment("This is an example toml configuration file."))
+    doc.add(comment("Overwrite content to meet your apps requirements."))
     app = table()
     app["debug"] = True
     app["wrk_dir"] = str(ctx.dirs.app_home / "wrk_dir")
     doc["app"] = app
     ctx.files.config.write_text(tomlkit.dumps(doc))
-
-
-def default_cfg_writer(ctx):
-    ctx.files.config.touch()
 
 
 def default_cfg_validator(config):
@@ -70,7 +66,7 @@ def config_handler_factory(
 ):
     def _config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
 
-        confirm.ctx_var(ctx, "files", (Path, PosixPath, WindowsPath))
+        confirm.ctx_var(ctx, "files", app.context_class)
         ctx.files.config = Path(ctx.dirs.app_home, f"{app.name}.config.ini")
 
         if not ctx.files.config.exists():
@@ -110,7 +106,7 @@ def default_logging_config_builder(app, ctx):
 def logging_config_factory(logging_config_builder=default_logging_config_builder):
     def logging_config_handler(app: "Application", ctx: Union[SimpleNamespace, Any]):
         # TODO: we need an option for pointing to an alternative logging config file
-        confirm.ctx_var(ctx, "files", (Path, PosixPath, WindowsPath))
+        confirm.ctx_var(ctx, "files", app.context_class)
         ctx.files.logging_config = Path(ctx.dirs.app_home, f"{app.name}.logging.ini")
         ctx.files.log_file = Path(ctx.dirs.log_dir, f"{app.name}.logs.txt")
 
@@ -128,9 +124,18 @@ def logging_config_factory(logging_config_builder=default_logging_config_builder
     return logging_config_handler
 
 
-def command_finder(command_finder: Callable) -> Callable:
+def command_finder(command_func: Callable) -> Callable:
+    """
+    This finder is only used when the user provided a single command function to the Application
+    object (i.e. the app does not have multiple entry points).
+
+    :param command_func: function
+    :return: command_finder function
+
+    """
     def _command_finder(app: "Application", ctx: Union[SimpleNamespace, Any]):
-        app.command = command_finder(ctx)
+        confirm.command_func(command_func)
+        app.command = command_func
         return app, ctx
 
     return _command_finder
