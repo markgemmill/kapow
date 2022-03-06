@@ -2,8 +2,8 @@ import sys
 from types import SimpleNamespace
 from typing import Callable
 from typing import ClassVar
-from typing import Union
 from typing import List
+from typing import Union
 import kapow.handlers.core
 from . import confirm
 from . import handlers
@@ -86,10 +86,14 @@ class Application:
         )
 
         if callable(command_func) and callable(command_finder):
-            raise LaunchError("Cannot provide a command and a command finder function to the kapow.Application object.")
+            raise LaunchError(
+                "Cannot provide a command and a command finder function to the kapow.Application object."
+            )
 
         if callable(command_func):
-            self._add_handler("command_finder", kapow.handlers.core.command_finder(command_func))
+            self._add_handler(
+                "command_finder", kapow.handlers.core.command_finder(command_func)
+            )
         else:
             self._add_handler("command_finder", command_finder)
 
@@ -173,7 +177,7 @@ class Application:
     def cli_args(self, value):
         self._cli_args = value
 
-    def initialize(self, cli_args: List[str]=None, appdirs_class: ClassVar=None):
+    def initialize(self, cli_args: List[str] = None, appdirs_class: ClassVar = None):
         """
         This is primarily used for test purposes.
 

@@ -133,6 +133,7 @@ def command_finder(command_func: Callable) -> Callable:
     :return: command_finder function
 
     """
+
     def _command_finder(app: "Application", ctx: Union[SimpleNamespace, Any]):
         confirm.command_func(command_func)
         app.command = command_func

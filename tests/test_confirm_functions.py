@@ -1,8 +1,8 @@
-import pytest
 from pathlib import Path
+import pytest
+from kapow import SimpleNamespace
 from kapow import confirm
 from kapow.errors import LaunchError
-from kapow import SimpleNamespace
 
 
 def test_confirm_expression():
@@ -29,7 +29,7 @@ def test_confirm_context_variable():
 
     with pytest.raises(LaunchError) as ex:
         confirm.ctx_var(ns, "bar", str)
-    assert 'bar' in str(ex.value)
+    assert "bar" in str(ex.value)
 
 
 def test_confirm_directory_exists():
@@ -46,7 +46,7 @@ def test_confirm_assert_callable():
 def test_confirm_handler_func():
 
     with pytest.raises(LaunchError) as ex:
-        confirm.handler_func(lambda:0)
+        confirm.handler_func(lambda: 0)
     assert "`<lambda>` has 0 arguments" in str(ex.value)
 
     def test_handler(a, b):
@@ -58,7 +58,7 @@ def test_confirm_handler_func():
 def test_confirm_error_func():
 
     with pytest.raises(LaunchError) as ex:
-        confirm.error_func(lambda x,y:0)
+        confirm.error_func(lambda x, y: 0)
     assert "`<lambda>` has 2 arguments" in str(ex.value)
 
     def test_handler(a, b, c):

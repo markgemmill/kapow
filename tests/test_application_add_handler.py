@@ -90,7 +90,6 @@ def test_application_docopt_cli_handler():
 
     app.main()
 
-
     assert messages[0] == "CLI ARGS"
     assert messages[1] == "CLI> run: True"
     assert messages[2] == "CLI> --debug: True"
