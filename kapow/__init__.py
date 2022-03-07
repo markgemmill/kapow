@@ -10,7 +10,7 @@ from . import handlers
 from .appdirs import AppDirs
 from .errors import LaunchError
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 
 class Application:

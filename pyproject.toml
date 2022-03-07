@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kapow"
-version = "0.2.1"
+version = "0.2.2"
 description = ""
 authors = ["Mark Gemmill <mark@markgemmill.com>"]
 maintainers = [
